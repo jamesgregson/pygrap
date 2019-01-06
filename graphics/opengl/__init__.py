@@ -1,0 +1,1 @@
+from graphics.opengl.opengl_viewer import GLWidget
