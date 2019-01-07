@@ -1,4 +1,16 @@
+import ctypes
 from OpenGL.GL import *
+
+def _glGetActiveAttrib(program, index):
+    bufsize = 256
+    length = (ctypes.c_int*1)()
+    size = (ctypes.c_int*1)()
+    type = (ctypes.c_uint*1)()
+    name = ctypes.create_string_buffer(bufsize)
+    # pyopengl has a bug, this is a patch
+    glGetActiveAttrib(program, index, bufsize, length, size, type, name)
+    name = name[:length[0]].decode('utf-8')
+    return name, size[0], type[0]
 
 class Shader(object):
     """ Helper class for using GLSL shader programs
@@ -19,6 +31,9 @@ class Shader(object):
         self.program_id = glCreateProgram()
         vs_id = self.add_shader(vertex, GL_VERTEX_SHADER)
         frag_id = self.add_shader(fragment, GL_FRAGMENT_SHADER)
+
+        self.attributes = {}
+        self.uniforms = {}
 
         glAttachShader(self.program_id, vs_id)
         glAttachShader(self.program_id, frag_id)
@@ -57,6 +72,14 @@ class Shader(object):
         except:
             glDeleteShader(shader_id)
             raise
+
+    def get_attributes(self):
+        count = glGetProgramiv( self.program_id, GL_ACTIVE_ATTRIBUTES )
+        for i in range(count):
+            ret = _glGetActiveAttrib( self.program_id, i )
+            if ret[2] == GL_FLOAT_VEC3:
+                print('Vec3')
+            print( ret )
 
     def uniform_location(self, name):
         """ Helper function to get location of an OpenGL uniform variable
