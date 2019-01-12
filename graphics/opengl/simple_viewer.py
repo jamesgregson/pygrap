@@ -1,3 +1,4 @@
+import sys
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5 import QtGui
@@ -17,6 +18,10 @@ class SimpleViewer(QtOpenGL.QGLWidget):
 
     key_press_cb     = QtCore.pyqtSignal( QtGui.QKeyEvent )
     key_release_cb   = QtCore.pyqtSignal( QtGui.QKeyEvent )
+
+    @staticmethod
+    def application():
+        return QtWidgets.QApplication(sys.argv)
 
     def __init__(self, parent=None):
         self.parent = parent

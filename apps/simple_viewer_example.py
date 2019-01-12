@@ -1,11 +1,12 @@
 """About the simplest PyQt OpenGL example with decent interaction"""
 
+
 import sys
 
 from OpenGL.GL import *
+from OpenGL.GLU import *
 
-from graphics.core import Transform
-from graphics.opengl import Application, SimpleViewer
+from graphics.opengl.simple_viewer import SimpleViewer
 
 width = 800
 height = 600
@@ -24,14 +25,13 @@ def initialize():
 def render():
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
 
-    proj  = Transform().perspective(45.0, aspect, 0.1, 10.0 ).matrix()
-    model = Transform().lookat( 0.0, 2.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0 ).matrix()
-
     glMatrixMode( GL_PROJECTION )
-    glLoadMatrixf( proj.transpose() )
-
+    glLoadIdentity()
+    gluPerspective( 45.0, aspect, 0.1, 10.0 )
+    
     glMatrixMode( GL_MODELVIEW )
-    glLoadMatrixf( model.transpose() )
+    glLoadIdentity()
+    gluLookAt( 0.0, 2.0, 5.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0 )
 
     glPointSize(5.0)
     glLineWidth(5.0)
@@ -63,7 +63,7 @@ def key_release( evt ):
     print('Key release {}'.format(evt.key()) )
 
 # create the QApplication
-app = Application()
+app = SimpleViewer.application()
 
 # set up the display
 viewer = SimpleViewer()
