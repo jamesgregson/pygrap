@@ -15,6 +15,7 @@ class Mesh:
         self.vtx = None
         self.tex = None
         self.nor = None
+        self.tri = None
 
     @property
     def vertices( self ):
@@ -49,7 +50,6 @@ class Mesh:
         else:
             self.init_mat = self.materials.index(matname)
         return self.init_mat
-
 
     def add_vertex( self, pos ):
         self.init_vtx.append( ( pos[0], pos[1], pos[2] ) )
@@ -110,6 +110,7 @@ class Mesh:
         self.vtx = numpy.array( vtx, dtype=numpy.float32 )
         self.tex = numpy.array( tex, dtype=numpy.float32 )
         self.nor = numpy.zeros_like( self.vtx )
+        self.tri = numpy.array( self.init_tri )
 
         # accumulate normals to vertices
         for idx, f in enumerate(self.init_tri):
@@ -117,12 +118,12 @@ class Mesh:
             self.nor[idx*3+1,:] = vnor[f[1][0]]/numpy.linalg.norm(vnor[f[1][0]])
             self.nor[idx*3+2,:] = vnor[f[2][0]]/numpy.linalg.norm(vnor[f[2][0]])
 
-    def save( self, filename ):
-        numpy.savez( filename, vtx=self.vtx, tex=self.tex, nor=self.nor, img=self.img )
+    # def save( self, filename ):
+    #     numpy.savez( filename, vtx=self.vtx, tex=self.tex, nor=self.nor, self.tri, img=self.img )
 
-    def load( self, filename ):
-        ds = numpy.load( filename )
-        self.vtx = ds['vtx']
-        self.nor = ds['nor']
-        self.tex = ds['tex']
-        self.img = ds['img']
+    # def load( self, filename ):
+    #     ds = numpy.load( filename )
+    #     self.vtx = ds['vtx']
+    #     self.nor = ds['nor']
+    #     self.tex = ds['tex']
+    #     self.img = ds['img']
