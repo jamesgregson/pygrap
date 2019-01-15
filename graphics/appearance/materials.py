@@ -1,6 +1,44 @@
+"""Defines a basic material 
+"""
 
 class Material:
+    """Defines a basic material with ambient, diffuse, specular terms
+
+    Attributes:
+        name (string): name of material
+
+        diffuse (3x float): diffuse RGB albedo
+
+        ambient (3x float): ambient RGB term
+
+        specular (3x float): specular RGB term
+
+        specular_exponent (float): exponent for specular model
+
+        diffuse_map (string): name of file containing diffuse
+            albedo texture map
+
+        ambient_map (string): name of file containing ambient
+            texture map
+
+        specular_map (string): name of file containing specular
+            texture map
+
+        bump_map (string): name of file containing bump
+            texture map
+    """
+
     def __init__( self, name=None, mdict=None ):
+        """Constructs a material
+
+        Dictionary keys should be the name of the corresponding properties, as string
+        
+        Args:
+            name (string): name of material, may be overridden by mdict (see below)
+
+            mdict (dict): dictionary containing values for the material parameters,
+                overrides material name
+        """
         self._name        = name
         self._diffuse     = [1.0, 1.0, 1.0]
         self._diffuse_map = None
@@ -32,6 +70,7 @@ class Material:
                 self.bump_map = mdict['bump_map']
 
     def to_dict( self ):
+        """Returns the material in dict form"""
         m = {
             'name': self.name.copy,
             'diffuse': self.diffuse,

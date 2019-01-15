@@ -1,8 +1,22 @@
+"""Support for the Wavefront .OBJ file format and associated .MTL files
+
+Provides basic support for wavefront.obj file geometry and the corresponding
+material definitions in .mtl files
+"""
+
 import os
 
 import graphics
 
 def save_mtl_file( materials, filename ):
+    """Saves a list of materials to a file
+
+    Args:
+        materials (list of graphics.appearance.Material): list of materials
+            to save to the mtl file
+        
+        filename (string): output filename
+    """
     with open( filename, 'w' ) as f:
         
         def write_key( key, vals ):
@@ -25,6 +39,14 @@ def save_mtl_file( materials, filename ):
             f.write('\n')
 
 def load_mtl_file( filename ):
+    """Loads a list of materials from a file
+
+    Args:
+        filename (string): input filename
+
+    Returns:
+        list of graphics.appearance.Material objects
+    """
     with open( filename, 'r' ) as f:
         materials = []
         curr_mat = None
@@ -65,6 +87,18 @@ def load_mtl_file( filename ):
 
 
 def load_obj( filename ):
+    """Loads a Wavefront .obj file
+
+    Args:
+        filename (string): input filename to load
+
+    Returns:
+        graphics.geometry.Mesh containing object geometry
+
+        list of graphics.appearance.Material each defining
+            one material, or None if the object does not
+            reference any material library
+    """
     with open( filename, 'r' ) as f:
         mesh = graphics.geometry.Mesh()
         path = os.path.dirname(filename)
@@ -99,6 +133,16 @@ def load_obj( filename ):
         return mesh, materials
 
 def save_obj( mesh, filename, mat_file=None ):
+    """Saves a mesh object as a Wavefront .obj file
+
+    Args:
+        mesh (graphics.geometry.Mesh): mesh to be saved
+
+        filename (string): name of file to write
+
+        mat_file (string): name of material file to write,
+            *defined relative to path of filename*
+    """
     with open( filename, 'w' ) as f:
         d = os.path.splitext(filename)[0]
         mfile = '{}.mtl'.format(d)
