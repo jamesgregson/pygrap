@@ -2,6 +2,17 @@ import ctypes
 import numpy
 from OpenGL.GL import *
 
+def _glGetActiveAttrib(program, index):
+    bufsize = 256
+    length = (ctypes.c_int*1)()
+    size = (ctypes.c_int*1)()
+    type = (ctypes.c_uint*1)()
+    name = ctypes.create_string_buffer(bufsize)
+    # pyopengl has a bug, this is a patch
+    glGetActiveAttrib(program, index, bufsize, length, size, type, name)
+    name = name[:length[0]].decode('utf-8')
+    return name, size[0], type[0]
+
 class Shader(object):
     def __init__(self, vertex, fragment):
         self.program_id = glCreateProgram()
@@ -30,7 +41,6 @@ class Shader(object):
         for attr in self.__glattributes:
             self.__vbos[attr] = glGenBuffers(1)
 
-
     def add_shader(self, source, shader_type):
         try:
             shader_id = glCreateShader(shader_type)
@@ -50,11 +60,11 @@ class Shader(object):
     def release( self ):
         glUseProgram( 0 )
 
-    def attributes( self ):
-        return self.__glattributes
-
-    def uniforms( self ):
+    def uniforms(self):
         return self.__gluniforms
+
+    def attributes(self):
+        return self.__glattributes
 
     def __setitem__( self, key, val ):
         if key in self.__gluniforms:
@@ -105,8 +115,6 @@ class Shader(object):
             name, size, vtype = active_attributes( self.program_id, i )
             results[name] = (SHADER_COMPONENTS[vtype],size,SHADER_TYPE[vtype],vtype)
         return results
-
-
 
     def uniform_location(self, name):
         return glGetUniformLocation(self.program_id, name)
