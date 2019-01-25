@@ -32,8 +32,6 @@ class Shader(object):
         glDeleteShader(vs_id)
         glDeleteShader(frag_id)
 
-        # self.__default_array = glGenVertexArrays(1)
-        # glBindVertexArray(self.__default_array)
         self.__glattributes = self.__get_glattributes()
         self.__gluniforms   = self.__get_gluniforms()
 
@@ -83,10 +81,15 @@ class Shader(object):
         elif key in self.__glattributes:
             attr = self.__glattributes[key]
             loc  = glGetAttribLocation(self.program_id,key)
-            glBindBuffer(GL_ARRAY_BUFFER, self.__vbos[key])
-            glBufferData( GL_ARRAY_BUFFER, val.itemsize*val.size, val, GL_STATIC_DRAW )
-            glVertexAttribPointer( loc, attr[0], SHADER_GLTYPE[attr[-1]], GL_FALSE, 0, None )
-            glEnableVertexAttribArray( loc )
+            if len(val) == attr[0]:
+                SHADER_ATTRIBUTE_FUNC[attr[-1]](
+                    loc, val
+                )
+            else:
+                glBindBuffer(GL_ARRAY_BUFFER, self.__vbos[key])
+                glBufferData( GL_ARRAY_BUFFER, val.itemsize*val.size, val, GL_STATIC_DRAW )
+                glVertexAttribPointer( loc, attr[0], SHADER_GLTYPE[attr[-1]], GL_FALSE, 0, None )
+                glEnableVertexAttribArray( loc )
 
 
     def __get_gluniforms( self ):
@@ -166,6 +169,52 @@ SHADER_UNIFORM_FUNC = {
     GL_SAMPLER_1D:          glUniform1iv,
     GL_SAMPLER_2D:          glUniform1iv,
     GL_SAMPLER_3D:          glUniform1iv
+}
+
+SHADER_ATTRIBUTE_FUNC = {
+    GL_FLOAT:               glVertexAttrib1fv,
+    GL_FLOAT_VEC2:          glVertexAttrib2fv,
+    GL_FLOAT_VEC3:          glVertexAttrib3fv,
+    GL_FLOAT_VEC4:          glVertexAttrib4fv,
+    GL_DOUBLE:              glVertexAttrib1dv,
+    GL_DOUBLE_VEC2:         glVertexAttrib2dv,
+    GL_DOUBLE_VEC3:         glVertexAttrib3dv,
+    GL_DOUBLE_VEC4:         glVertexAttrib4dv,
+    # # GL_INT:                 None,
+    # # GL_INT_VEC2:            glUniform2iv,
+    # # GL_INT_VEC3:            glUniform3iv,
+    # # GL_INT_VEC4:            glUniform4iv,
+    # # GL_UNSIGNED_INT:        glUniform1uiv,
+    # # GL_UNSIGNED_INT_VEC2:   glUniform2uiv,
+    # # GL_UNSIGNED_INT_VEC3:   glUniform3uiv,
+    # # GL_UNSIGNED_INT_VEC4:   glUniform4uiv,
+    # # # GL_BOOL:                None,
+    # # # GL_BOOL_VEC2:           None,
+    # # # GL_BOOL_VEC3:           None,
+    # # # GL_BOOL_VEC4:           None,
+    # # GL_FLOAT_MAT2:          glUniformMatrix2fv,
+    # # GL_FLOAT_MAT3:          glUniformMatrix3fv,
+    # # GL_FLOAT_MAT4:          glUniformMatrix4fv,
+    # # GL_FLOAT_MAT2x3:        glUniformMatrix2x3fv,
+    # # GL_FLOAT_MAT3x2:        glUniformMatrix3x2fv,
+    # # GL_FLOAT_MAT4x2:        glUniformMatrix4x2fv,
+    # # GL_FLOAT_MAT2x4:        glUniformMatrix2x4fv,
+    # # GL_FLOAT_MAT4x3:        glUniformMatrix4x3fv,
+    # # GL_FLOAT_MAT3x4:        glUniformMatrix3x4fv,
+
+    # # GL_FLOAT_MAT2:          glUniformMatrix2fv,
+    # # GL_FLOAT_MAT3:          glUniformMatrix3fv,
+    # # GL_FLOAT_MAT4:          glUniformMatrix4fv,
+    # # GL_FLOAT_MAT2x3:        glUniformMatrix2x3fv,
+    # # GL_FLOAT_MAT3x2:        glUniformMatrix3x2fv,
+    # # GL_FLOAT_MAT4x2:        glUniformMatrix4x2fv,
+    # # GL_FLOAT_MAT2x4:        glUniformMatrix2x4fv,
+    # # GL_FLOAT_MAT4x3:        glUniformMatrix4x3fv,
+    # # GL_FLOAT_MAT3x4:        glUniformMatrix3x4fv,
+
+    # GL_SAMPLER_1D:          glUniform1iv,
+    # GL_SAMPLER_2D:          glUniform1iv,
+    # GL_SAMPLER_3D:          glUniform1iv
 }
 
 SHADER_GLTYPE = {

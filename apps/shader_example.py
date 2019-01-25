@@ -39,39 +39,34 @@ void main(){
 }
 """
 
-global shader
-width = 800
-height = 600
-aspect = width/height
-shader = None
+class State:
+    def __init__( self ):
+        pass
+
+state = State()
+state.width  = 800
+state.height = 600
+state.aspect = state.width/state.height
 
 def resize_cb( w, h ):
-    width = w
-    height = h
-    aspect = w/h
-    glViewport( 0, 0, width, height )
+    state.width = w
+    state.height = h
+    state.aspect = w/h
+    glViewport( 0, 0, state.width, state.height )
 
 def initialize_cb():
-    global shader
     glEnable(GL_DEPTH_TEST)
     glClearColor( 0.7, 0.7, 1.0, 0.0 )
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0)
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
+    state.vao = glGenVertexArrays(1)
+    glBindVertexArray( state.vao )
 
-    shader = Shader( vtx_shader, frg_shader )
+    state.shader = Shader( vtx_shader, frg_shader )
     print( 'Uniforms:')
-    print( shader.uniforms() )
+    print( state.shader.uniforms() )
     print( ' ' )
     print( 'Attributes:' )
-    print( shader.attributes() )
-
-def render_cb():
-    global shader
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
-
-    projection = Transform().perspective( 45.0, aspect, 0.1, 10.0 )
-    modelview = Transform().lookat(1.0,1.0,4.0,0.0,0.0,0.0,0.0,1.0,0.0)
+    print( state.shader.attributes() )
 
     positions = numpy.array([
         [0.0,0.0,0.0],[1.0,0.0,0.0],
@@ -82,18 +77,28 @@ def render_cb():
         [0.0,1.0,0.0],[0.0,1.0,0.0],
         [0.0,0.0,1.0],[0.0,0.0,1.0]], dtype=numpy.float32 )
 
-    shader.use()
-    shader['modelview']  = modelview.matrix()
-    shader['projection'] = projection.matrix()
+    state.shader.use()
+    state.shader['position']   = positions.ravel()
+    #state.shader['color']      = (1.0,1.0,0.0)
+    state.shader['color']      = colors.ravel()
 
-    shader['position']   = positions.ravel()
-    shader['color']      = colors.ravel()
+    glBindVertexArray(0)
 
-    glLineWidth(4.0)
 
+def render_cb():
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
+
+    projection = Transform().perspective( 45.0, state.aspect, 0.1, 10.0 )
+    modelview = Transform().lookat(1.0,1.0,4.0,0.0,0.0,0.0,0.0,1.0,0.0)
+
+    state.shader.use()
+    state.shader['modelview']  = modelview.matrix()
+    state.shader['projection'] = projection.matrix()
+
+    glLineWidth( 4.0 )
+    glBindVertexArray( state.vao )
     glDrawArrays( GL_LINES, 0, 6 )
 
-    shader.release()
 
 # create the QApplication
 app = SimpleViewer.application()
@@ -105,7 +110,7 @@ viewer.initialize_cb.connect( initialize_cb )
 viewer.render_cb.connect( render_cb )
 
 # resize the window
-viewer.resize( width, height )
+viewer.resize( state.width, state.height )
 viewer.show()
 
 # main loop
