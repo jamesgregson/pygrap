@@ -21,8 +21,15 @@ class Shader(object):
         glDeleteShader(vs_id)
         glDeleteShader(frag_id)
 
+        # self.__default_array = glGenVertexArrays(1)
+        # glBindVertexArray(self.__default_array)
         self.__glattributes = self.__get_glattributes()
         self.__gluniforms   = self.__get_gluniforms()
+
+        self.__vbos = {}
+        for attr in self.__glattributes:
+            self.__vbos[attr] = glGenBuffers(1)
+
 
     def add_shader(self, source, shader_type):
         try:
@@ -66,8 +73,10 @@ class Shader(object):
         elif key in self.__glattributes:
             attr = self.__glattributes[key]
             loc  = glGetAttribLocation(self.program_id,key)
+            glBindBuffer(GL_ARRAY_BUFFER, self.__vbos[key])
+            glBufferData( GL_ARRAY_BUFFER, val.itemsize*val.size, val, GL_STATIC_DRAW )
+            glVertexAttribPointer( loc, attr[0], SHADER_GLTYPE[attr[-1]], GL_FALSE, 0, None )
             glEnableVertexAttribArray( loc )
-            glVertexAttribPointer( loc, attr[0], SHADER_GLTYPE[attr[-1]], GL_FALSE, 0, val )
 
 
     def __get_gluniforms( self ):
