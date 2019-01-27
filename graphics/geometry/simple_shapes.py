@@ -1,3 +1,4 @@
+from graphics.appearance import Material
 from graphics.geometry import Mesh
 
 def cube():
@@ -30,6 +31,15 @@ def cube():
     ]
     tc = [ 0, 1, 2, 3 ]
 
+    materials = [
+        {'name': 'bottom', 'diffuse': [0.25,0.50,0.25] },
+        {'name': 'top',    'diffuse': [0.50,1.00,0.50] },
+        {'name': 'left',   'diffuse': [0.50,0.25,0.25] },
+        {'name': 'right',  'diffuse': [1.00,0.50,0.50] },
+        {'name': 'near',   'diffuse': [0.25,0.25,0.50] },
+        {'name': 'far',    'diffuse': [0.50,0.50,1.00] }
+    ]
+
     m = Mesh()
     for v in vtx:
         m.add_vertex( v )
@@ -38,6 +48,6 @@ def cube():
     for side,f in zip(mat,face):
         m.add_material( side )
         m.add_face( f, tc )
-    
     m.finalize()
-    return m
+
+    return m, [ Material( mdict=mat ) for mat in materials ]

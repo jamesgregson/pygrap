@@ -101,11 +101,11 @@ def load_obj( filename ):
     """
     with open( filename, 'r' ) as f:
         mesh = graphics.geometry.Mesh()
-        path = os.path.dirname(filename)
+        path = os.path.dirname(os.path.abspath(filename))
         materials = None
         curr_mat = -1
         for line in f:
-            toks = line.split(' ')
+            toks = line.split()
             if len(toks) == 0:
                 continue
             elif toks[0] == 'mtllib':
@@ -114,7 +114,7 @@ def load_obj( filename ):
             elif toks[0] == 'usemtl':
                 curr_mat = mesh.add_material( toks[1] )
             elif toks[0] == 'v':
-                mesh.add_vertex( (float(toks[1]),float(toks[2]), float(toks(3))) )
+                mesh.add_vertex( (float(toks[1]),float(toks[2]), float(toks[3])) )
             elif toks[0] == 'vt':
                 mesh.add_texcoord( (float(toks[1]), float(toks[2])) )
             elif toks[0] == 'f':

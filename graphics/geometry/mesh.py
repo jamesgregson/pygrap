@@ -41,7 +41,7 @@ class Mesh:
 
     @material_file.setter
     def material_file( self, filename ):
-        self.material_file = filename
+        self.mat_file = filename
 
     def add_material( self, matname ):
         if matname not in self.materials:
