@@ -29,6 +29,10 @@ class Shader(object):
             glDeleteShader(vs_id)
             glDeleteShader(frag_id)
             raise RuntimeError('Error linking program: %s' % (info))
+
+        info = glGetProgramInfoLog(self.program_id)
+        print( info )
+
         glDeleteShader(vs_id)
         glDeleteShader(frag_id)
 
@@ -77,7 +81,7 @@ class Shader(object):
                 SHADER_UNIFORM_FUNC[uni[-1]](
                     glGetUniformLocation(self.program_id,key),
                     uni[1],
-                    val.ravel() )
+                    val.ravel().astype(uni[2]) )
         elif key in self.__glattributes:
             attr = self.__glattributes[key]
             loc  = glGetAttribLocation(self.program_id,key)
@@ -87,7 +91,7 @@ class Shader(object):
                 )
             else:
                 glBindBuffer(GL_ARRAY_BUFFER, self.__vbos[key])
-                glBufferData( GL_ARRAY_BUFFER, val.itemsize*val.size, val, GL_STATIC_DRAW )
+                glBufferData( GL_ARRAY_BUFFER, val.itemsize*val.size, val.astype(attr[2]), GL_STATIC_DRAW )
                 glVertexAttribPointer( loc, attr[0], SHADER_GLTYPE[attr[-1]], GL_FALSE, 0, None )
                 glEnableVertexAttribArray( loc )
 

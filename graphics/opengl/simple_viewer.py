@@ -28,6 +28,11 @@ class SimpleViewer(QtOpenGL.QGLWidget):
         QtOpenGL.QGLWidget.__init__(self, parent)
         self.setMouseTracking(True)
 
+
+    def idle( self ):
+        self.idle_cb.emit()
+        self.updateGL()
+
     def mouseMoveEvent( self, evt ):
         self.mouse_move_cb.emit( evt )
 
@@ -45,6 +50,11 @@ class SimpleViewer(QtOpenGL.QGLWidget):
 
     def initializeGL(self):
         self.initialize_cb.emit()
+        self.timer = QtCore.QTimer()
+        self.timer.setSingleShot( False )
+        self.timer.setInterval( 0.016 )
+        self.timer.timeout.connect( self.idle )
+        self.timer.start()
 
     def resizeGL(self, width, height):
         if height == 0: height = 1
