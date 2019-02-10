@@ -78,10 +78,14 @@ class Shader(object):
                     True, # transpose from row to column major
                     val.ravel() )
             else:
+                # SHADER_UNIFORM_FUNC[uni[-1]](
+                #     glGetUniformLocation(self.program_id,key),
+                #     uni[1],
+                #     val.ravel().astype(uni[2]) )
                 SHADER_UNIFORM_FUNC[uni[-1]](
                     glGetUniformLocation(self.program_id,key),
                     uni[1],
-                    val.ravel().astype(uni[2]) )
+                    val )
         elif key in self.__glattributes:
             attr = self.__glattributes[key]
             loc  = glGetAttribLocation(self.program_id,key)

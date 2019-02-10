@@ -18,25 +18,44 @@ vtx_shader = """
 uniform mat4 modelview;
 uniform mat4 projection;
  
-in vec3 position;
-in vec3 color;
- 
-out vec3 Color;
- 
+in vec3 in_position;
+in vec3 in_normal;
+
+out vec3 position;
+out vec3 normal;
+
 void main(){
-    Color = color;
-    gl_Position = projection*modelview*vec4(position,1.0);
+    vec4 pos  = modelview*vec4(in_position,1.0);
+    vec4 npos = modelview*vec4(in_position+in_normal,1.0);
+
+    normal      = npos.xyz-pos.xyz;
+    position    = pos.xyz;
+    gl_Position = projection*pos;
 }
 """
 
 frg_shader = """
 #version 150
- 
-in vec3 Color;
-out vec4 outputF;
+
+// lighting information
+uniform vec3  light_pos = vec3(10.0,10.0,10.0);
+uniform vec3  diffuse   = vec3(1.0,1.0,1.0);
+uniform vec3  ambient   = vec3(0.0,0.0,0.0);
+uniform vec3  specular  = vec3(0.0,0.0,0.0);
+uniform float spec_exp  = 10.0;
+
+// geometry
+in vec3 normal;
+in vec3 position;
+
+// output fragment color
+out vec3 result;
  
 void main(){
-    outputF = vec4( Color.r, Color.g, Color.b, 0.0 );
+    vec3 frag_nor  = normalize(normal);
+    vec3 light_dir = normalize(light_pos-position);
+    float cos_theta = max( 0.0, dot( frag_nor, light_dir ) );
+    result = diffuse*cos_theta + ambient + specular*pow( cos_theta, spec_exp );
 }
 """
 
@@ -60,28 +79,18 @@ def initialize_cb():
     glEnable(GL_DEPTH_TEST)
     glClearColor( 0.7, 0.7, 1.0, 0.0 )
 
-    state.vao = glGenVertexArrays(1)
-    glBindVertexArray( state.vao )
+    # Useful?
+    # state.vao = glGenVertexArrays(1)
+    # glBindVertexArray( state.vao )
 
     state.shader = Shader( vtx_shader, frg_shader )
+    state.shader.use()
+
     print( 'Uniforms:')
     print( state.shader.uniforms() )
     print( ' ' )
     print( 'Attributes:' )
     print( state.shader.attributes() )
-
-    positions = numpy.array([
-        [0.0,0.0,0.0],[1.0,0.0,0.0],
-        [0.0,0.0,0.0],[0.0,1.0,0.0],
-        [0.0,0.0,0.0],[0.0,0.0,1.0]], dtype=numpy.float32)
-    colors = numpy.array([
-        [1.0,0.0,0.0],[1.0,0.0,0.0],
-        [0.0,1.0,0.0],[0.0,1.0,0.0],
-        [0.0,0.0,1.0],[0.0,0.0,1.0]], dtype=numpy.float32 )
-
-    state.shader.use()
-    state.shader['position']   = positions.ravel()
-    state.shader['color']      = colors.ravel()
 
     # load a mesh and materials
     state.mesh, materials = graphics.io.load_obj('{}/cube.obj'.format(graphics.GRAPHICS_DATA_DIR) )
@@ -94,17 +103,23 @@ def render_cb():
     state.frame += 1
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
 
-    projection = Transform().lookat(1.0,-1.0,4.0,0.0,0.0,0.0,0.0,1.0,0.0).perspective( 45.0, state.aspect, 0.1, 10.0 )
+    projection = Transform().lookat(1.0,2.0,4.0,0.0,0.0,0.0,0.0,1.0,0.0).perspective( 45.0, state.aspect, 0.1, 10.0 )
     modelview  = Transform().rotate( state.frame, 0.0, 1.0, 0.0 )
 
+    # 
     state.shader.use()
     state.shader['modelview']  = modelview.matrix()
     state.shader['projection'] = projection.matrix()
 
-    state.shader['position'] = state.mesh.vertices
+    state.shader['light_pos'] = (1.0,1.0,4.0)
+
+    state.shader['in_normal']   = state.mesh.normals
+    state.shader['in_position'] = state.mesh.vertices
     for matname,(start,end) in state.mesh.material_triangles.items():        
         mat = state.materials[matname]
-        state.shader['color'] = mat.diffuse
+        state.shader['diffuse']  = mat.diffuse
+        state.shader['ambient']  = (0.1,0.1,0.1)
+        state.shader['specular'] = (0.3,0.3,0.3)
         glDrawArrays( GL_TRIANGLES, start*3, (end-start)*3 )
 
 
