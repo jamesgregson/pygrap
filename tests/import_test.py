@@ -11,3 +11,5 @@ save_mtl_file( materials, '{}/{}'.format( graphics.GRAPHICS_DATA_DIR, matfile ) 
 
 # now load it
 mesh, materials = load_obj( mshfile )
+
+print('hello')

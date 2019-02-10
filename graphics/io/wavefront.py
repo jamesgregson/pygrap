@@ -67,7 +67,7 @@ def load_mtl_file( filename ):
                 if toks[0] == 'Kd':
                     curr_mat.diffuse = floatify(toks[1::])
                 elif toks[0] == 'Ka':
-                    curr_mat.diffuse = floatify(toks[1::])
+                    curr_mat.ambient = floatify(toks[1::])
                 elif toks[0] == 'Ks':
                     curr_mat.specular = floatify(toks[1::])
                 elif toks[0] == 'Ns':

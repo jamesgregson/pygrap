@@ -7,6 +7,7 @@ import numpy
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+import graphics
 from graphics.core import Transform
 from graphics.opengl import SimpleViewer
 from graphics.opengl import Shader
@@ -47,6 +48,7 @@ state = State()
 state.width  = 800
 state.height = 600
 state.aspect = state.width/state.height
+state.frame  = 0
 
 def resize_cb( w, h ):
     state.width = w
@@ -79,25 +81,31 @@ def initialize_cb():
 
     state.shader.use()
     state.shader['position']   = positions.ravel()
-    #state.shader['color']      = (1.0,1.0,0.0)
     state.shader['color']      = colors.ravel()
+
+    # load a mesh and materials
+    state.mesh, materials = graphics.io.load_obj('{}/cube.obj'.format(graphics.GRAPHICS_DATA_DIR) )
+    state.materials = { mat.name: mat for mat in materials }
 
     glBindVertexArray(0)
 
 
 def render_cb():
+    state.frame += 1
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
 
-    projection = Transform().perspective( 45.0, state.aspect, 0.1, 10.0 )
-    modelview = Transform().lookat(1.0,1.0,4.0,0.0,0.0,0.0,0.0,1.0,0.0)
+    projection = Transform().lookat(1.0,-1.0,4.0,0.0,0.0,0.0,0.0,1.0,0.0).perspective( 45.0, state.aspect, 0.1, 10.0 )
+    modelview  = Transform().rotate( state.frame, 0.0, 1.0, 0.0 )
 
     state.shader.use()
     state.shader['modelview']  = modelview.matrix()
     state.shader['projection'] = projection.matrix()
 
-    glLineWidth( 4.0 )
-    glBindVertexArray( state.vao )
-    glDrawArrays( GL_LINES, 0, 6 )
+    state.shader['position'] = state.mesh.vertices
+    for matname,(start,end) in state.mesh.material_triangles.items():        
+        mat = state.materials[matname]
+        state.shader['color'] = mat.diffuse
+        glDrawArrays( GL_TRIANGLES, start*3, (end-start)*3 )
 
 
 # create the QApplication

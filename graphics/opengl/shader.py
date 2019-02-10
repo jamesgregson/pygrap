@@ -86,6 +86,7 @@ class Shader(object):
             attr = self.__glattributes[key]
             loc  = glGetAttribLocation(self.program_id,key)
             if len(val) == attr[0]:
+                glDisableVertexAttribArray( loc )
                 SHADER_ATTRIBUTE_FUNC[attr[-1]](
                     loc, val
                 )

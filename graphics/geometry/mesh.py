@@ -16,6 +16,7 @@ class Mesh:
         self.tex = None
         self.nor = None
         self.tri = None
+        self.mat_tris = None
 
     @property
     def vertices( self ):
@@ -34,6 +35,12 @@ class Mesh:
         if self.nor is None:
             raise ValueError('Must load existing mesh or call finalize before accessing normals')
         return self.nor
+
+    @property
+    def material_triangles( self ):
+        if self.mat_tris is None:
+            raise ValueError('Must load existing mesh or call finalize before accessing material triangles')
+        return self.mat_tris
 
     @property
     def material_file( self ):
@@ -79,7 +86,18 @@ class Mesh:
 
         self.mat, self.init_tri = zip( *[ (mat,tri) for mat, tri in sorted(zip(self.mat,self.init_tri))] )
 
+        self.num_materials = 0
+        self.mat_tris = {}
+
+        curr_mat  = 0
+        mat_start = 0 
+
         for idx,f in enumerate(self.init_tri):
+            if self.mat[idx] != curr_mat:
+                self.mat_tris[self.materials[curr_mat]] = (mat_start,idx)
+                curr_mat  = self.mat[idx]
+                mat_start = idx
+
             # compute face normal
             a = numpy.array( self.init_vtx[f[0][0]] )
             b = numpy.array( self.init_vtx[f[1][0]] )
@@ -107,6 +125,8 @@ class Mesh:
             else:
                 tex.append( (0.0, 0.0) )
 
+        self.mat_tris[self.materials[curr_mat]] = (mat_start,len(self.init_tri))
+
         self.vtx = numpy.array( vtx, dtype=numpy.float32 )
         self.tex = numpy.array( tex, dtype=numpy.float32 )
         self.nor = numpy.zeros_like( self.vtx )
@@ -118,12 +138,3 @@ class Mesh:
             self.nor[idx*3+1,:] = vnor[f[1][0]]/numpy.linalg.norm(vnor[f[1][0]])
             self.nor[idx*3+2,:] = vnor[f[2][0]]/numpy.linalg.norm(vnor[f[2][0]])
 
-    # def save( self, filename ):
-    #     numpy.savez( filename, vtx=self.vtx, tex=self.tex, nor=self.nor, self.tri, img=self.img )
-
-    # def load( self, filename ):
-    #     ds = numpy.load( filename )
-    #     self.vtx = ds['vtx']
-    #     self.nor = ds['nor']
-    #     self.tex = ds['tex']
-    #     self.img = ds['img']
