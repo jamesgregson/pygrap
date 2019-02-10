@@ -15,7 +15,8 @@ from graphics.opengl import Shader
 vtx_shader = """
 #version 150
  
-uniform mat4 modelview;
+uniform mat4 model;
+uniform mat4 view;
 uniform mat4 projection;
  
 in vec3 in_position;
@@ -25,17 +26,20 @@ out vec3 position;
 out vec3 normal;
 
 void main(){
-    vec4 pos  = modelview*vec4(in_position,1.0);
-    vec4 npos = modelview*vec4(in_position+in_normal,1.0);
+    vec4 pos  = model*vec4(in_position,1.0);
+    vec4 npos = model*vec4(in_position+in_normal,1.0);
 
     normal      = npos.xyz-pos.xyz;
     position    = pos.xyz;
-    gl_Position = projection*pos;
+    gl_Position = projection*view*pos;
 }
 """
 
 frg_shader = """
 #version 150
+
+// camera position
+uniform vec3 camera_pos = vec3(0.0,0.0,0.0);
 
 // lighting information
 uniform vec3  light_pos = vec3(10.0,10.0,10.0);
@@ -54,8 +58,10 @@ out vec3 result;
 void main(){
     vec3 frag_nor  = normalize(normal);
     vec3 light_dir = normalize(light_pos-position);
+    vec3 view_dir  = normalize(camera_pos-position);
+    float spec     = max( 0.0, -dot( reflect(light_dir,frag_nor), view_dir ));
     float cos_theta = max( 0.0, dot( frag_nor, light_dir ) );
-    result = diffuse*cos_theta + ambient + specular*pow( cos_theta, spec_exp );
+    result = diffuse*cos_theta + ambient + specular*pow( spec, spec_exp );
 }
 """
 
@@ -79,10 +85,7 @@ def initialize_cb():
     glEnable(GL_DEPTH_TEST)
     glClearColor( 0.7, 0.7, 1.0, 0.0 )
 
-    # Useful?
-    # state.vao = glGenVertexArrays(1)
-    # glBindVertexArray( state.vao )
-
+    # Shader stuff
     state.shader = Shader( vtx_shader, frg_shader )
     state.shader.use()
 
@@ -92,10 +95,15 @@ def initialize_cb():
     print( 'Attributes:' )
     print( state.shader.attributes() )
 
+    # view stuff
+    state.azimuth   = 0.0
+    state.elevation = 0.0
+
     # load a mesh and materials
     state.mesh, materials = graphics.io.load_obj('{}/cube.obj'.format(graphics.GRAPHICS_DATA_DIR) )
     state.materials = { mat.name: mat for mat in materials }
 
+    # unbind any vertex arrays
     glBindVertexArray(0)
 
 
@@ -103,24 +111,40 @@ def render_cb():
     state.frame += 1
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
 
-    projection = Transform().lookat(1.0,2.0,4.0,0.0,0.0,0.0,0.0,1.0,0.0).perspective( 45.0, state.aspect, 0.1, 10.0 )
-    modelview  = Transform().rotate( state.frame, 0.0, 1.0, 0.0 )
+    projection = Transform().perspective( 45.0, state.aspect, 0.1, 10.0 )
+    view       = Transform().lookat(0.0,0.0,4.0,0.0,0.0,0.0,0.0,1.0,0.0)
+    model      = Transform().rotate( state.azimuth, 0.0, 1.0, 0.0 ).rotate( state.elevation, 1.0, 0.0, 0.0 )
+    cam_pos    = view.inverse()*(0.0, 0.0, 0.0)
 
-    # 
+    # enable the shader 
     state.shader.use()
-    state.shader['modelview']  = modelview.matrix()
+
+    # view and projection matricies
+    state.shader['view']       = view.matrix()
     state.shader['projection'] = projection.matrix()
+    state.shader['camera_pos'] = cam_pos
 
-    state.shader['light_pos'] = (1.0,1.0,4.0)
+    # world-space lighting
+    state.shader['light_pos']  = (1.0,10.0,4.0)
 
+    # per object/material stuff
+    state.shader['model']      =  model.matrix()
     state.shader['in_normal']   = state.mesh.normals
     state.shader['in_position'] = state.mesh.vertices
+
+    # draw each material individually with its
+    # specific (hacked a bit here) materials
     for matname,(start,end) in state.mesh.material_triangles.items():        
         mat = state.materials[matname]
         state.shader['diffuse']  = mat.diffuse
-        state.shader['ambient']  = (0.1,0.1,0.1)
-        state.shader['specular'] = (0.3,0.3,0.3)
+        state.shader['ambient']  = mat.diffuse*0.25
+        state.shader['specular'] = (1.0,1.0,1.0)
+        state.shader['spec_exp'] = 70.0
         glDrawArrays( GL_TRIANGLES, start*3, (end-start)*3 )
+
+def mouse_move_cb( evt ):
+    state.azimuth = evt.x()
+    state.elevation = evt.y()
 
 
 # create the QApplication
@@ -130,6 +154,7 @@ app = SimpleViewer.application()
 viewer = SimpleViewer()
 viewer.resize_cb.connect( resize_cb )
 viewer.initialize_cb.connect( initialize_cb )
+viewer.mouse_move_cb.connect( mouse_move_cb )
 viewer.render_cb.connect( render_cb )
 
 # resize the window

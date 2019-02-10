@@ -120,7 +120,7 @@ class Transform:
                 R[0] /= R[3]
                 R[1] /= R[3]
                 R[2] /= R[3]
-                return R[0:3,:]
+                return R[0:3]
             else:
                 return R
 

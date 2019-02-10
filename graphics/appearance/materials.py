@@ -1,5 +1,4 @@
-"""Defines a basic material 
-"""
+import numpy
 
 class Material:
     """Defines a basic material with ambient, diffuse, specular terms
@@ -40,11 +39,11 @@ class Material:
                 overrides material name
         """
         self._name        = name
-        self._diffuse     = [1.0, 1.0, 1.0]
+        self._diffuse     = numpy.array([1.0, 1.0, 1.0])
         self._diffuse_map = None
-        self._ambient     = [0.0, 0.0, 0.0]
+        self._ambient     = numpy.array([0.0, 0.0, 0.0])
         self._ambient_map = None
-        self._specular     = [0.0, 0.0, 0.0]
+        self._specular    = numpy.array([0.0, 0.0, 0.0])
         self._specular_map = None
         self._specular_exponent = 1.0
         self._bump_map     = None
@@ -100,7 +99,7 @@ class Material:
     def diffuse( self, val ):
         if len(val) != 3:
             raise ValueError('Expected 3-element array-like')
-        self._diffuse = [v for v in val]
+        self._diffuse = numpy.array([v for v in val])
 
     @property 
     def ambient( self ):
@@ -110,7 +109,7 @@ class Material:
     def ambient( self, val ):
         if len(val) != 3:
             raise ValueError('Expected 3-element array-like')
-        self._ambient = [v for v in val]
+        self._ambient = numpy.array([v for v in val])
 
     @property 
     def specular( self ):
@@ -120,7 +119,7 @@ class Material:
     def specular( self, val ):
         if len(val) != 3:
             raise ValueError('Expected 3-element array-like')
-        self._specular = [v for v in val]
+        self._specular = numpy.array([v for v in val])
 
     @property
     def specular_exponent( self ):
